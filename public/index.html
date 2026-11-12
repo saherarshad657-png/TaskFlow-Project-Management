@@ -1,0 +1,358 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f8fc">
+  <title>TaskFlow | Project Management</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Authentication -->
+  <main id="authView" class="auth-layout">
+    <section class="auth-brand">
+      <a href="/" class="brand brand-light">
+        <span class="brand-icon">T</span>
+        TaskFlow
+      </a>
+      <div class="brand-message">
+        <span class="eyebrow">PLAN. COLLABORATE. DELIVER.</span>
+        <h1>Great work starts with a clear plan.</h1>
+        <p>Bring your projects, tasks, and team together in one organized workspace.</p>
+        <div class="feature-pills">
+          <span>✓ Project boards</span>
+          <span>✓ Team collaboration</span>
+          <span>✓ Track progress</span>
+        </div>
+      </div>
+      <p class="brand-footer">Your work, beautifully organized.</p>
+    </section>
+
+    <section class="auth-panel">
+      <div class="auth-card">
+        <div class="mobile-brand brand">
+          <span class="brand-icon">T</span> TaskFlow
+        </div>
+        <span class="eyebrow">YOUR WORKSPACE AWAITS</span>
+        <h2 id="authTitle">Welcome back</h2>
+        <p id="authSubtitle" class="muted">Sign in to continue to your workspace.</p>
+
+        <div class="auth-tabs">
+          <button type="button" id="showLogin" class="auth-tab active">Sign in</button>
+          <button type="button" id="showSignup" class="auth-tab">Create account</button>
+        </div>
+
+        <form id="authForm">
+          <div id="nameGroup" class="form-group hidden">
+            <label for="authName">Full name</label>
+            <input id="authName" name="name" type="text"
+              placeholder="Your full name" minlength="2" maxlength="60"
+              autocomplete="name">
+          </div>
+
+          <div class="form-group">
+            <label for="authEmail">Email address</label>
+            <input id="authEmail" name="email" type="email"
+              placeholder="you@example.com" required autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label for="authPassword">Password</label>
+            <input id="authPassword" name="password" type="password"
+              placeholder="Enter your password" required minlength="8"
+              maxlength="72" autocomplete="current-password">
+            <small id="passwordHint" class="field-hint">Enter your password to sign in.</small>
+          </div>
+
+          <p id="authError" class="form-error" role="alert"></p>
+          <button id="authSubmit" type="submit" class="button button-primary button-full">
+            Sign in to TaskFlow
+          </button>
+        </form>
+
+        <p class="auth-note">Secure access to your projects and team workspace.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Main application -->
+  <div id="appView" class="app-shell hidden">
+    <aside id="sidebar" class="sidebar">
+      <a href="/" class="brand sidebar-brand">
+        <span class="brand-icon">T</span> TaskFlow
+      </a>
+
+      <div class="workspace-label">WORKSPACE</div>
+      <button id="navBoards" class="nav-item active" type="button">
+        <span>▦</span> My projects
+      </button>
+
+      <div class="sidebar-section-heading">
+        <span>YOUR BOARDS</span>
+        <button id="newBoardShortcut" class="icon-button" type="button"
+          aria-label="Create a board" title="Create a board">+</button>
+      </div>
+
+      <div id="boardList" class="board-list">
+        <p class="muted sidebar-empty">Your boards will appear here.</p>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="profile-card">
+          <div id="userAvatar" class="avatar">U</div>
+          <div class="profile-info">
+            <strong id="userName">User</strong>
+            <span id="userEmail">user@example.com</span>
+          </div>
+        </div>
+        <button id="logoutButton" class="nav-item logout-button" type="button">
+          <span>↪</span> Sign out
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button id="menuToggle" class="icon-button mobile-menu" type="button"
+          aria-label="Toggle navigation">☰</button>
+        <div class="breadcrumbs">
+          <span>My projects</span>
+          <span class="breadcrumb-divider">/</span>
+          <strong id="breadcrumbBoard">Select a board</strong>
+        </div>
+        <button id="topNewBoard" class="button button-primary" type="button">
+          <span>+</span> New project
+        </button>
+      </header>
+
+      <section class="page-content">
+        <div id="welcomeSection" class="welcome-section">
+          <div>
+            <span class="eyebrow">YOUR WORKSPACE</span>
+            <h1>Let's get things done.</h1>
+            <p class="muted">Organize your work and make progress, one task at a time.</p>
+          </div>
+          <div class="welcome-decoration">✦</div>
+        </div>
+
+        <section id="emptyBoards" class="empty-state">
+          <div class="empty-icon">▦</div>
+          <h2>Your next great project starts here</h2>
+          <p>Create a board to organize tasks, collaborate with your team, and track progress.</p>
+          <button id="emptyNewBoard" class="button button-primary" type="button">
+            + Create your first board
+          </button>
+        </section>
+
+        <section id="boardView" class="hidden">
+          <div class="board-heading">
+            <div>
+              <div class="board-title-line">
+                <h1 id="boardTitle">Project board</h1>
+                <span id="boardMemberCount" class="member-count"></span>
+              </div>
+              <p id="boardDescription" class="muted"></p>
+            </div>
+            <button id="newTaskButton" class="button button-primary" type="button">
+              + Add task
+            </button>
+          </div>
+
+          <div class="board-toolbar">
+            <div class="board-stats">
+              <span class="stat-dot"></span>
+              <span id="taskCount">0 tasks</span>
+            </div>
+            <div class="filter-controls">
+              <input id="taskSearch" type="search" placeholder="Search tasks..."
+                aria-label="Search tasks">
+              <select id="priorityFilter" aria-label="Filter by priority">
+                <option value="all">All priorities</option>
+                <option value="High">High priority</option>
+                <option value="Medium">Medium priority</option>
+                <option value="Low">Low priority</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="kanbanBoard" class="kanban-board">
+            <section class="kanban-column" data-status="Pending">
+              <header class="column-header">
+                <div class="column-heading">
+                  <span class="status-indicator pending-indicator"></span>
+                  <h2>Pending</h2>
+                  <span class="column-count" data-count="Pending">0</span>
+                </div>
+                <button class="column-add" data-add-status="Pending"
+                  type="button" aria-label="Add pending task">+</button>
+              </header>
+              <div class="task-list" data-task-list="Pending"></div>
+              <p class="column-drop-hint">Drop tasks here</p>
+            </section>
+
+            <section class="kanban-column" data-status="In Progress">
+              <header class="column-header">
+                <div class="column-heading">
+                  <span class="status-indicator progress-indicator"></span>
+                  <h2>In Progress</h2>
+                  <span class="column-count" data-count="In Progress">0</span>
+                </div>
+                <button class="column-add" data-add-status="In Progress"
+                  type="button" aria-label="Add task in progress">+</button>
+              </header>
+              <div class="task-list" data-task-list="In Progress"></div>
+              <p class="column-drop-hint">Drop tasks here</p>
+            </section>
+
+            <section class="kanban-column" data-status="Completed">
+              <header class="column-header">
+                <div class="column-heading">
+                  <span class="status-indicator completed-indicator"></span>
+                  <h2>Completed</h2>
+                  <span class="column-count" data-count="Completed">0</span>
+                </div>
+                <button class="column-add" data-add-status="Completed"
+                  type="button" aria-label="Add completed task">+</button>
+              </header>
+              <div class="task-list" data-task-list="Completed"></div>
+              <p class="column-drop-hint">Drop tasks here</p>
+            </section>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <!-- Create board dialog -->
+  <dialog id="boardDialog" class="app-dialog">
+    <form id="boardForm">
+      <div class="dialog-heading">
+        <div>
+          <span class="eyebrow">NEW WORKSPACE</span>
+          <h2>Create a project board</h2>
+        </div>
+        <button type="button" class="icon-button dialog-close"
+          data-close-dialog="boardDialog" aria-label="Close">×</button>
+      </div>
+      <div class="form-group">
+        <label for="boardNameInput">Project name</label>
+        <input id="boardNameInput" name="name" required minlength="2"
+          maxlength="100" placeholder="e.g. Website Redesign">
+      </div>
+      <div class="form-group">
+        <label for="boardDescriptionInput">Description</label>
+        <textarea id="boardDescriptionInput" name="description"
+          maxlength="1000" rows="3" placeholder="What is this project about?"></textarea>
+      </div>
+      <p id="boardError" class="form-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="button button-secondary"
+          data-close-dialog="boardDialog">Cancel</button>
+        <button id="saveBoardButton" type="submit" class="button button-primary">
+          Create board
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Create and edit task dialog -->
+  <dialog id="taskDialog" class="app-dialog">
+    <form id="taskForm">
+      <div class="dialog-heading">
+        <div>
+          <span class="eyebrow">TASK DETAILS</span>
+          <h2 id="taskDialogTitle">Create a task</h2>
+        </div>
+        <button type="button" class="icon-button dialog-close"
+          data-close-dialog="taskDialog" aria-label="Close">×</button>
+      </div>
+      <input id="taskIdInput" type="hidden">
+
+      <div class="form-group">
+        <label for="taskTitleInput">Task title</label>
+        <input id="taskTitleInput" name="title" required minlength="2"
+          maxlength="150" placeholder="What needs to be done?">
+      </div>
+
+      <div class="form-group">
+        <label for="taskDescriptionInput">Description</label>
+        <textarea id="taskDescriptionInput" name="description"
+          maxlength="3000" rows="3" placeholder="Add details about this task..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="taskStatusInput">Status</label>
+          <select id="taskStatusInput" name="status">
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="taskPriorityInput">Priority</label>
+          <select id="taskPriorityInput" name="priority">
+            <option value="Low">Low</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="taskDueDateInput">Due date</label>
+        <input id="taskDueDateInput" name="dueDate" type="date">
+      </div>
+
+      <div class="form-group">
+        <label for="taskAssigneeInput">Assign to</label>
+        <select id="taskAssigneeInput" name="assigneeId">
+          <option value="">Unassigned</option>
+        </select>
+        <small class="field-hint">Only registered members of this board can be assigned.</small>
+      </div>
+
+      <p id="taskError" class="form-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="deleteTaskButton" type="button"
+          class="button button-danger hidden">Delete task</button>
+        <span class="dialog-actions-spacer"></span>
+        <button type="button" class="button button-secondary"
+          data-close-dialog="taskDialog">Cancel</button>
+        <button id="saveTaskButton" type="submit" class="button button-primary">
+          Save task
+        </button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Task comments dialog -->
+  <dialog id="commentsDialog" class="app-dialog comments-dialog">
+    <div class="dialog-heading">
+      <div>
+        <span class="eyebrow">TEAM CONVERSATION</span>
+        <h2 id="commentsTaskTitle">Task comments</h2>
+      </div>
+      <button type="button" class="icon-button dialog-close"
+        data-close-dialog="commentsDialog" aria-label="Close">×</button>
+    </div>
+    <div id="commentsList" class="comments-list">
+      <p class="muted">Loading comments...</p>
+    </div>
+    <form id="commentForm">
+      <div class="form-group">
+        <label for="commentInput">Add a comment</label>
+        <textarea id="commentInput" required maxlength="2000" rows="3"
+          placeholder="Share an update with your team..."></textarea>
+      </div>
+      <p id="commentError" class="form-error" role="alert"></p>
+      <button id="sendCommentButton" type="submit"
+        class="button button-primary button-full">Post comment</button>
+    </form>
+  </dialog>
+</body>
+</html>
