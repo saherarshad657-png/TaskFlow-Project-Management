@@ -1,55 +1,50 @@
-# Project Management App
+# TaskFlow – Project Management App
 
-A full-stack project management application inspired by Kanban boards. It is designed to help users organize projects, manage tasks, track progress, and collaborate with team members.
+A full-stack project management application that helps users organize projects, manage tasks, collaborate with team members, and communicate through real-time updates.
 
 ## Features
 
-### User Authentication
+### Authentication
 - User registration and login.
-- Password hashing using bcrypt.
 - JWT-based authentication.
 - Protected API routes.
 
 ### Board Management
-- Create project boards.
-- View boards belonging to the authenticated user.
-- Add registered users as board members.
-- Manage board membership and permissions.
+- Create and manage project boards.
+- Add board members.
+- Control access based on board membership and roles.
 
 ### Task Management
-- Create tasks within project boards.
-- View tasks associated with a board.
-- Update task details and status.
-- Set task priorities.
-- Assign tasks to board members.
-- Delete tasks.
-- Track task creation and update timestamps.
+- Create, update, and delete tasks.
+- Organize tasks by status:
+  - Pending
+  - In Progress
+  - Completed
+- Set task priorities:
+  - Low
+  - Medium
+  - High
+- Assign tasks to team members.
+- Add descriptions and due dates.
 
-### Comments and Collaboration
-- Add comments to tasks.
-- Retrieve comments associated with tasks.
-- Display comment authors and timestamps.
+### Real-Time Collaboration
+- Live task creation, updates, and deletion.
+- Real-time comments.
+- Online user presence.
+- Automatic presence updates when users disconnect.
+- Duplicate event protection.
+- Socket.IO authentication using JWT.
 
 ## Technologies Used
 
-**Backend**
-- Node.js
-- Express.js
-- MongoDB
-- Mongoose
-- JSON Web Token (JWT)
-- bcryptjs
-
-**Frontend**
-- HTML
-- CSS
-- JavaScript
-
-**Development Tools**
-- Visual Studio Code
-- Git
-- GitHub
-- Postman / PowerShell for API testing
+| Area | Technologies |
+|---|---|
+| Frontend | HTML, CSS, JavaScript |
+| Backend | Node.js, Express.js |
+| Database | MongoDB, Mongoose |
+| Authentication | JSON Web Tokens (JWT) |
+| Real-Time Communication | Socket.IO |
+| Development | Nodemon, Git, GitHub |
 
 ## Project Structure
 
@@ -60,9 +55,9 @@ project-management-app/
 │   └── auth.js
 │
 ├── models/
-│   ├── User.js
 │   ├── Board.js
 │   ├── Task.js
+│   ├── User.js
 │   └── comment.js
 │
 ├── routes/
@@ -72,20 +67,15 @@ project-management-app/
 │   └── commentRoutes.js
 │
 ├── public/
-│   ├── index.html
 │   ├── css/
-│   │   └── style.css
-│   └── js/
-│       └── app.js
+│   ├── js/
+│   └── index.html
 │
-├── docs/
 ├── .env
 ├── .gitignore
 ├── package.json
-├── package-lock.json
 ├── server.js
-├── README.md
-└── API.md
+└── README.md
 ```
 
 ## Installation and Setup
@@ -93,10 +83,10 @@ project-management-app/
 ### 1. Clone the repository
 
 ```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
+git clone https://github.com/saherarshad657-png/project-management-app.git
 ```
 
-### 2. Navigate to the project folder
+### 2. Navigate to the project directory
 
 ```bash
 cd project-management-app
@@ -108,98 +98,108 @@ cd project-management-app
 npm install
 ```
 
+For Windows PowerShell, if script execution is restricted, use:
+
+```powershell
+npm.cmd install
+```
+
 ### 4. Configure environment variables
 
-Create a `.env` file in the root directory.
-
-Add the following variables:
+Create a `.env` file in the root directory:
 
 ```env
 PORT=5000
-MONGODB_URI=your_mongodb_connection_string
+MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_secret_key
 ```
 
 Replace the example values with your own MongoDB connection string and a secure JWT secret.
 
-**Never upload your `.env` file or expose your database credentials.**
+**Important:** Never upload your `.env` file or expose your database credentials.
 
-### 5. Start the server
-
-```bash
-node server.js
-```
-
-For development with automatic restarting:
+### 5. Start the development server
 
 ```bash
-npx nodemon server.js
+npm run dev
 ```
 
-The server will run at:
+On Windows PowerShell:
 
-```text
+```powershell
+npm.cmd run dev
+```
+
+The application will be available at:
+
 http://localhost:5000
-```
 
-## API Endpoints
+## Real-Time Collaboration Architecture
 
-### Authentication
+TaskFlow uses Socket.IO to enable communication between users working on the same project board.
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/auth/signup` | Register a user |
-| POST | `/api/auth/login` | Log in a user |
-| GET | `/api/auth/me` | Get authenticated user |
+### How it works
 
-### Boards
+1. A user logs in and receives a JWT authentication token.
+2. The frontend establishes an authenticated Socket.IO connection.
+3. Users join the Socket.IO room associated with their project board.
+4. When a task is created, updated, or deleted, the backend broadcasts an event to the corresponding board room.
+5. Other connected users receive the event and update their interfaces automatically.
+6. Comments are broadcast to other users on the same board.
+7. Online presence is maintained using connected socket information.
+8. When a user disconnects, their presence is updated for the remaining board members.
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/boards` | Create a board |
-| GET | `/api/boards` | Get user's boards |
-| GET | `/api/boards/:id` | Get board details |
-| POST | `/api/boards/:id/members` | Add a board member |
+### Socket.IO Events
 
-### Tasks
+| Event | Purpose |
+|---|---|
+| `board:join` | Join a project board |
+| `board:leave` | Leave a project board |
+| `task:created` | Notify users about a new task |
+| `task:updated` | Notify users about task changes |
+| `task:deleted` | Notify users about task deletion |
+| `comment:created` | Notify users about a new comment |
+| `presence:update` | Update online user information |
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/tasks` | Create a task |
-| GET | `/api/tasks/board/:boardId` | Get board tasks |
-| PATCH | `/api/tasks/:id` | Update a task |
-| DELETE | `/api/tasks/:id` | Delete a task |
+## Testing Real-Time Collaboration
 
-### Comments
+The following scenarios have been tested using two browser sessions:
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/comments/:taskId/comments` | Add a comment |
-| GET | `/api/comments/:taskId/comments` | Retrieve task comments |
+- Creating a task in one session updates the other session.
+- Updating task status synchronizes across sessions.
+- Deleting a task removes it from both sessions.
+- Posting a comment displays it in the other session.
+- Online users are displayed on shared boards.
+- Closing a browser session removes that user from the online list.
 
-All protected endpoints require a valid JWT access token in the Authorization header:
+## API Overview
 
-```text
-Authorization: Bearer YOUR_JWT_TOKEN
-```
+The backend provides REST API endpoints for:
 
-The comments endpoints require registering `commentRoutes.js` in `server.js` before they can be used.
-
-## Testing
-
-The backend APIs can be tested using PowerShell or Postman.
-
-The following operations have been tested:
-
-- Server health check.
-- User login.
-- Board retrieval.
-- Task creation.
-- Task retrieval.
-- Task status updates.
-- Task deletion.
+| Route | Purpose |
+|---|---|
+| `/api/auth` | User authentication |
+| `/api/boards` | Board management |
+| `/api/tasks` | Task management |
+| `/api/tasks/:taskId/comments` | Task comments |
+| `/api/health` | Server health check |
 
 ## Future Improvements
 
-- Interactive Kanban board interface.
-- Drag-and-drop task management.
+- Optimistic concurrency control for conflicting task edits.
+- Improved notification system.
+- Activity history and audit logs.
+- Enhanced user interface and mobile responsiveness.
+- Automated testing.
+
+## Author
+
+**Saher Arshad**
+
+Computer Engineer
+
+GitHub: https://github.com/saherarshad657-png
+
+---
+
+*Developed as a full-stack project management and real-time collaboration application.*

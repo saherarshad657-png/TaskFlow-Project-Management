@@ -2,6 +2,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const { body, validationResult } = require("express-validator");
+const { randomUUID } = require("crypto");
 
 const Task = require("../models/Task");
 const Board = require("../models/Board");
@@ -64,6 +65,19 @@ function canEditTaskDetails(board, task, userId) {
     isAdmin(board, userId) ||
     isTaskCreator(task, userId)
   );
+}
+
+// Broadcast an event to everyone in the board room
+function broadcastTaskEvent(req, eventName, boardId, data) {
+  const io = req.app.get("io");
+
+  if (io) {
+    io.to(`board:${boardId}`).emit(eventName, {
+      eventId: randomUUID(),
+      boardId: String(boardId),
+      ...data
+    });
+  }
 }
 
 // Validate request data
@@ -190,7 +204,6 @@ router.post(
         dueDate: req.body.dueDate || null
       };
 
-      // Validate optional assignee
       if (req.body.assignee) {
         if (!isMember(access.board, req.body.assignee)) {
           return res.status(400).json({
@@ -208,6 +221,14 @@ router.post(
         { path: "assignee", select: "name email" },
         { path: "createdBy", select: "name email" }
       ]);
+
+      // Notify other users about the new task
+      broadcastTaskEvent(
+        req,
+        "task:created",
+        task.board,
+        { task }
+      );
 
       return res.status(201).json({
         success: true,
@@ -356,8 +377,6 @@ router.patch(
         return sendAccessError(res, access.error);
       }
 
-      // Only owner, admin or creator can edit task details.
-      // Any board member can update task status.
       const detailFields = [
         "title",
         "description",
@@ -380,8 +399,6 @@ router.patch(
         });
       }
 
-      // Validate assignee when assigning a user.
-      // Null is allowed to remove an existing assignee.
       if (updates.assignee) {
         if (!isMember(access.board, updates.assignee)) {
           return res.status(400).json({
@@ -391,7 +408,6 @@ router.patch(
         }
       }
 
-      // Convert empty date values to null
       if (updates.dueDate === null || updates.dueDate === "") {
         updates.dueDate = null;
       }
@@ -404,6 +420,14 @@ router.patch(
         { path: "assignee", select: "name email" },
         { path: "createdBy", select: "name email" }
       ]);
+
+      // Notify other users about the updated task
+      broadcastTaskEvent(
+        req,
+        "task:updated",
+        task.board,
+        { task }
+      );
 
       return res.status(200).json({
         success: true,
@@ -424,7 +448,6 @@ router.patch(
 // ========================================
 // DELETE /api/tasks/:id
 // Delete a task
-// Owner, admin or task creator only
 // ========================================
 
 router.delete("/:id", async (req, res) => {
@@ -464,7 +487,18 @@ router.delete("/:id", async (req, res) => {
       });
     }
 
+    const boardId = task.board;
+    const taskId = task._id;
+
     await task.deleteOne();
+
+    // Notify other users about the deleted task
+    broadcastTaskEvent(
+      req,
+      "task:deleted",
+      boardId,
+      { taskId: String(taskId) }
+    );
 
     return res.status(200).json({
       success: true,
